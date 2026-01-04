@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok OAuth Callback</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .success {
+            color: #28a745;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .code-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .instructions {
+            color: #666;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success">✓</div>
+        <h1>Autenticación Exitosa</h1>
+        <p>TikTok ha autorizado tu aplicación correctamente.</p>
+        
+        <div id="codeDisplay"></div>
+        
+        <div class="instructions">
+            <strong>Siguiente paso:</strong><br>
+            Copia el código de arriba y pégalo en n8n cuando te lo solicite.
+        </div>
+        
+        <button onclick="copyCode()">Copiar Código</button>
+    </div>
+
+    <script>
+        // Obtener parámetros de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
+        const state = urlParams.get('state');
+        
+        const codeDisplay = document.getElementById('codeDisplay');
+        
+        if (error) {
+            codeDisplay.innerHTML = `
+                <div class="error">
+                    <strong>Error:</strong> ${error}<br>
+                    <small>${urlParams.get('error_description') || 'Autenticación fallida'}</small>
+                </div>
+            `;
+        } else if (code) {
+            codeDisplay.innerHTML = `
+                <div class="code-box">
+                    <strong>Código de Autorización:</strong><br>
+                    <span id="authCode">${code}</span>
+                </div>
+            `;
+            
+            // Enviar el código de vuelta a n8n (si estamos en localhost)
+            if (window.opener) {
+                window.opener.postMessage({
+                    type: 'oauth-callback',
+                    code: code,
+                    state: state
+                }, 'http://localhost:5679');
+            }
+        } else {
+            codeDisplay.innerHTML = `
+                <div class="error">
+                    No se recibió ningún código de autorización.
+                </div>
+            `;
+        }
+        
+        function copyCode() {
+            const code = document.getElementById('authCode');
+            if (code) {
+                navigator.clipboard.writeText(code.textContent);
+                alert('¡Código copiado al portapapeles!');
+            }
+        }
+    </script>
+</body>
+</html>
