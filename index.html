@@ -82,6 +82,7 @@
     </div>
 
     <script>
+        // Obtener parámetros de la URL
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const error = urlParams.get('error');
@@ -104,12 +105,13 @@
                 </div>
             `;
             
+            // Enviar el código de vuelta a n8n (si estamos en localhost)
             if (window.opener) {
                 window.opener.postMessage({
                     type: 'oauth-callback',
                     code: code,
                     state: state
-                }, '*');
+                }, 'http://localhost:5679');
             }
         } else {
             codeDisplay.innerHTML = `
